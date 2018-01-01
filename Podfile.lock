@@ -1,0 +1,28 @@
+PODS:
+  - Highlightr (1.1.0)
+  - PanelKit (2.0.1)
+  - SpreadsheetView (0.8.4)
+
+DEPENDENCIES:
+  - Highlightr (from `https://github.com/raspu/Highlightr.git`, branch `master`)
+  - PanelKit
+  - SpreadsheetView
+
+EXTERNAL SOURCES:
+  Highlightr:
+    :branch: master
+    :git: https://github.com/raspu/Highlightr.git
+
+CHECKOUT OPTIONS:
+  Highlightr:
+    :commit: 1b23387f70b4133464218e84f018ddbbfe6952d2
+    :git: https://github.com/raspu/Highlightr.git
+
+SPEC CHECKSUMS:
+  Highlightr: 70c4df19e4aa55aa1b4387fb98182abce1dec9da
+  PanelKit: d05cecac1ab39af375b56ff21c7b5a9915a3eb5b
+  SpreadsheetView: 17c55b6dc82099993cc2ceb818248d19f3220998
+
+PODFILE CHECKSUM: 3fdb501ab5af9fc1cce993488d590199dbc7d6a7
+
+COCOAPODS: 1.3.1

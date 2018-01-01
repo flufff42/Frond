@@ -1,0 +1,3 @@
+lane :icons do
+    appicon(appicon_image_file: 'Assets/App Store.png', appicon_devices: [:ipad, :iphone, :ios_marketing], appicon_path: 'Frond/Assets.xcassets')
+end
