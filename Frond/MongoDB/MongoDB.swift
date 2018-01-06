@@ -62,7 +62,7 @@ struct MongoDB {
             do {
                 let myDatabase = MongoKitten.Database(named: database, atServer: server)
                 let collection = myDatabase[collection]
-                let documents = try collection.find(query)
+                let documents = try collection.find(query, limitedTo: 50) // FIXME
                 completion(.success(Array(documents)))
             } catch {
                 completion(.error(error))
