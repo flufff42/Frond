@@ -79,6 +79,7 @@ extension DocumentPanelViewController: SpreadsheetViewDataSource {
             let key = documentDictionary.keys.index(documentDictionary.startIndex, offsetBy: indexPath.row)
             let value = documentDictionary[key].value
             cell.value = value
+            cell.indexPath = indexPath
             cell.delegate = self
             cell.textView.text = PrimitiveUtilities.summary(primitive: value)
             return cell
@@ -98,6 +99,7 @@ extension DocumentPanelViewController: SpreadsheetViewDataSource {
                 let documentDictionary: [String : Primitive] = document.dictionaryRepresentation
                 let key = documentDictionary.keys.index(documentDictionary.startIndex, offsetBy: indexPath.row)
                 let value = documentDictionary[key].value
+                cell.indexPath = indexPath
                 cell.value = value
                 cell.delegate = self
                 cell.textView.text = PrimitiveUtilities.summary(primitive: value)
@@ -110,9 +112,8 @@ extension DocumentPanelViewController: SpreadsheetViewDataSource {
 
 extension DocumentPanelViewController: DocumentCellDelegate {
     func showDetails(for document: Document, in cell: DocumentCell) {
-        let indexPathForCell = sheet.indexPathForItem(at: cell.frame.origin)
-        guard let indexPath = indexPathForCell else { return }
-        let cellTitle = documentIsArray ? "\(indexPath.row)" : document.keys[indexPath.row-1]
+        guard let indexPath = cell.indexPath else { return }
+        let cellTitle = "\(indexPath.row)"
 
         guard let documentController = self.storyboard?.instantiateViewController(withIdentifier: "DocumentDetails") as? DocumentPanelViewController else { return }
         documentController.document = document

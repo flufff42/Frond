@@ -19,6 +19,12 @@ class CollectionViewController: UIViewController {
     var server: Server?
     var database: String = ""
     var collection: String = ""
+    var sortedKeys: [String] = []
+    var keys: Set<String> = [] {
+        didSet {
+            sortedKeys = keys.sorted()
+        }
+    }
     var documents: [Document] = []
 
     override func viewDidLoad() {
@@ -78,9 +84,7 @@ extension CollectionViewController: SpreadsheetViewDataSource {
     }
 
     func numberOfColumns(in spreadsheetView: SpreadsheetView) -> Int {
-        return documents.reduce(0, { (r, document) in
-            return max(r, document.dictionaryRepresentation.keys.count)
-        })
+        return sortedKeys.count
     }
 
     func spreadsheetView(_ spreadsheetView: SpreadsheetView, widthForColumn column: Int) -> CGFloat {
@@ -94,20 +98,22 @@ extension CollectionViewController: SpreadsheetViewDataSource {
     func spreadsheetView(_ spreadsheetView: SpreadsheetView, cellForItemAt indexPath: IndexPath) -> Cell? {
         if indexPath.row == 0, documents.count > 0 {
             guard let cell = spreadsheetView.dequeueReusableCell(withReuseIdentifier:  "Header", for: indexPath) as? HeaderCell else { fatalError() }
-            let sampleDocument = documents[0]
-            let documentDictionary: [String : Primitive] = sampleDocument.dictionaryRepresentation
-            let key = documentDictionary.keys.index(documentDictionary.startIndex, offsetBy: indexPath.column)
-            cell.textView.text = "\(documentDictionary[key].key)"
+            cell.textView.text = sortedKeys[indexPath.column]
             return cell
         } else {
             guard let cell = spreadsheetView.dequeueReusableCell(withReuseIdentifier:  "Document", for: indexPath) as? DocumentCell else { fatalError() }
             let document = documents[indexPath.row-1]
-            let sampleDocument: [String : Primitive] = document.dictionaryRepresentation
-            let key = sampleDocument.keys.index(sampleDocument.startIndex, offsetBy: indexPath.column)
-            let value = sampleDocument[key].value
-            cell.value = value
+            let documentDictionary: [String : Primitive] = document.dictionaryRepresentation
+            let key = sortedKeys[indexPath.column]
+            if let keyIndex = documentDictionary.index(forKey: key) {
+                let value = documentDictionary[keyIndex].value
+                cell.value = value
+                cell.textView.text = PrimitiveUtilities.summary(primitive: value)
+            } else {
+                cell.textView.text = "∅"
+            }
+            cell.indexPath = indexPath
             cell.delegate = self
-            cell.textView.text = PrimitiveUtilities.summary(primitive: value)
             return cell
         }
     }
@@ -122,8 +128,7 @@ extension CollectionViewController: DocumentCellDelegate {
     }
 
     func showDetails(for document: Document, in cell: DocumentCell) {
-        let indexPathForCell = sheet.indexPathForItem(at: cell.frame.origin)
-        guard let indexPath = indexPathForCell else { return }
+        guard let indexPath = cell.indexPath else { return }
         let parentDocument = documents[indexPath.row-1]
         let columnTitle = parentDocument.keys[indexPath.column]
 
@@ -154,6 +159,8 @@ extension CollectionViewController {
         MongoDB.performQuery(on: server, database: database, collection: collection, query: query, completion: { (result) in
             if case let .success(resultDocuments) = result {
                 DispatchQueue.main.async {
+                    self.keys = Set<String>()
+                    resultDocuments.forEach({$0.keys.forEach({_ = self.keys.insert($0)})})
                     self.documents = resultDocuments
                     self.sheet.reloadData()
                 }

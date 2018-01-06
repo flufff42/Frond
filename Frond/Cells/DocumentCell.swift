@@ -14,6 +14,7 @@ protocol DocumentCellDelegate: class {
 }
 
 class DocumentCell: Cell {
+    var indexPath: IndexPath?
     var value: Primitive?
     var delegate: DocumentCellDelegate?
     let textView = UILabel()
@@ -31,6 +32,11 @@ class DocumentCell: Cell {
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        contentView.backgroundColor = .clear
     }
 
     @objc func cellTapped() {

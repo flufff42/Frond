@@ -20,7 +20,10 @@ class CollectionsTableViewController: UITableViewController {
         MongoDB.listCollections(on: server, database: database) { (result) in
             switch result {
             case .success(let collections):
-                self.collections = collections
+                self.collections = collections.sorted(by: { (c1, c2) -> Bool in
+                    let nameKeyPath = \MongoKitten.Collection.name
+                    return c1[keyPath: nameKeyPath] < c2[keyPath: nameKeyPath]
+                })
                 DispatchQueue.main.async {
                     self.title = "Collections"
                     self.tableView.reloadData()
