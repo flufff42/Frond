@@ -12,6 +12,7 @@ class CollectionsTableViewController: UITableViewController {
 
     var server: Server?
     var database: String = ""
+    var document: FrondDocument?
     var collections = [MongoKitten.Collection]()
 
     override func viewDidLoad() {
@@ -61,10 +62,37 @@ class CollectionsTableViewController: UITableViewController {
         collectionController.server = server
         collectionController.database = database
         collectionController.collection = collection.name
+        collectionController.delegate = self
+        if let savedQueries = document?.savedQueries?[collection.name] {
+            collectionController.savedQueries = savedQueries
+        }
         navigationController?.pushViewController(collectionController, animated: true)
     }
 
     @IBAction func closeConnection(_ sender: Any) {
         dismiss(animated: true)
+    }
+}
+
+extension CollectionsTableViewController: CollectionViewControllerDelegate {
+    func saveQuery(queryDocumentString: QueryDocumentString, for collection: CollectionName) {
+        guard let document = document else { return }
+        if var savedQueries = document.savedQueries {
+            if var collectionQueries = savedQueries[collection] {
+                collectionQueries.append(queryDocumentString)
+            } else {
+                savedQueries[collection] = [queryDocumentString]
+                document.savedQueries = savedQueries
+            }
+        } else {
+            document.savedQueries = [collection: [queryDocumentString]]
+        }
+        document.save(to: document.fileURL, for: .forOverwriting) { (success) in
+            if (success) {
+                dump("Overwrote document with saved changes")
+            } else {
+                dump("Failed to overwrite document with saved changes")
+            }
+        }
     }
 }

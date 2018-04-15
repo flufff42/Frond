@@ -10,10 +10,14 @@ import SpreadsheetView
 import MongoKitten
 import PanelKit
 
+protocol CollectionViewControllerDelegate: class {
+    func saveQuery(queryDocumentString: QueryDocumentString, for collection: CollectionName)
+}
+
 class CollectionViewController: UIViewController {
     @IBOutlet weak var panelView: UIView!
     var _panels: [PanelViewController] = []
-
+    weak var delegate: CollectionViewControllerDelegate?
     @IBOutlet weak var sheet: SpreadsheetView!
     @IBOutlet weak var queryBarButtonItem: UIBarButtonItem!
     var server: Server?
@@ -25,6 +29,7 @@ class CollectionViewController: UIViewController {
             sortedKeys = keys.sorted()
         }
     }
+    var savedQueries: [QueryDocumentString]?
     var documents: [Document] = []
 
     override func viewDidLoad() {
@@ -41,6 +46,7 @@ class CollectionViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "query" {
             guard let controller = (segue.destination as? UINavigationController)?.topViewController as? QueryEditorViewController else { return }
+            controller.savedQueries = savedQueries
             controller.delegate = self
         }
     }
@@ -132,6 +138,8 @@ extension CollectionViewController: DocumentCellDelegate {
         let parentDocument = documents[indexPath.row-1]
         let columnTitle = parentDocument.keys[indexPath.column]
 
+        // TODO: Ensure column titles are sorted correctly to show the right title here
+
         guard let documentController = self.storyboard?.instantiateViewController(withIdentifier: "DocumentDetails") as? DocumentPanelViewController else { return }
         let panelController = PanelViewController(with: documentController, in: self)
         panels.append(panelController)
@@ -150,6 +158,10 @@ extension CollectionViewController: QueryEditorDelegate {
     func queryUpdated(editor: QueryEditorViewController, query: Query) {
         queryBarButtonItem.title = "Query: \(query.queryDocument.dictionaryRepresentation.count)"
         reload(query: query)
+    }
+
+    func saveQuery(queryDocumentString: QueryDocumentString) {
+        delegate?.saveQuery(queryDocumentString: queryDocumentString, for: collection)
     }
 }
 

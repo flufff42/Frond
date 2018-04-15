@@ -9,19 +9,21 @@ import UIKit
 import MongoKitten
 import Highlightr
 
-protocol QueryEditorDelegate {
+protocol QueryEditorDelegate: class {
     func queryUpdated(editor: QueryEditorViewController, query: Query)
+    func saveQuery(queryDocumentString: QueryDocumentString)
 }
 
 class QueryEditorViewController: UIViewController, UITextViewDelegate {
     @IBOutlet weak var queryParsingResultTextView: UITextView!
     @IBOutlet weak var stackView: UIStackView!
-    var delegate: QueryEditorDelegate?
+    weak var delegate: QueryEditorDelegate?
 
     var attributedStorage: CodeAttributedString?
     var layoutManager: NSLayoutManager?
     var textContainer: NSTextContainer?
     var attributedTextView: UITextView?
+    var savedQueries: [QueryDocumentString]?
 
     override func viewDidLoad() {
         attributedStorage = CodeAttributedString()
@@ -49,10 +51,41 @@ class QueryEditorViewController: UIViewController, UITextViewDelegate {
         attributedTextView.smartQuotesType = .no
 
         stackView.insertArrangedSubview(attributedTextView, at: 0)
+
+        if let savedQueries = savedQueries {
+            loadQueriesBarButton.isEnabled = savedQueries.count > 0
+        } else {
+            loadQueriesBarButton.isEnabled = false
+        }
+        saveQueryBarButton.isEnabled = false
     }
 
     @IBAction func done(_ sender: Any) {
         dismiss(animated: true, completion: nil)
+    }
+
+    @IBOutlet weak var loadQueriesBarButton: UIBarButtonItem!
+    @IBAction func loadSavedQueries(_ sender: Any) {
+        let actionController = UIAlertController(title: "Saved Queries", message: "Choose a saved query", preferredStyle: .actionSheet)
+        if let queries = savedQueries {
+            for query in queries {
+                actionController.addAction(UIAlertAction(title: query, style: .default, handler: { (action) in
+                    self.attributedTextView?.text = action.title
+                    self.validateQuery(self.attributedTextView)
+                }))
+            }
+            actionController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
+                actionController.dismiss(animated: true, completion: nil)
+            }))
+            actionController.popoverPresentationController?.barButtonItem = loadQueriesBarButton
+            present(actionController, animated: true, completion: nil)
+        }
+    }
+    @IBOutlet weak var saveQueryBarButton: UIBarButtonItem!
+    @IBAction func saveQuery(_ sender: Any) {
+        dump("Time to save query \(attributedTextView?.text)")
+        guard let query = attributedTextView?.text else { return }
+        delegate?.saveQuery(queryDocumentString: query)
     }
 
     @IBAction func validateQuery(_ sender: Any) {
@@ -64,10 +97,12 @@ class QueryEditorViewController: UIViewController, UITextViewDelegate {
             DispatchQueue.main.async {
                 self.delegate?.queryUpdated(editor: self, query: q)
                 self.queryParsingResultTextView.text = "\(q.queryDocument)"
+                self.saveQueryBarButton.isEnabled = true
             }
         case let .error(e):
             DispatchQueue.main.async {
                 self.queryParsingResultTextView.text = "\(e)"
+                self.saveQueryBarButton.isEnabled = false
             }
         }
     }

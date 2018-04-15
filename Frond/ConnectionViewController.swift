@@ -19,7 +19,10 @@ class ConnectionViewController: UIViewController {
         document?.open(completionHandler: { (success) in
             if success {
                 guard let connection = self.document as? FrondDocument else { return }
-                self.documentNameLabel.text = connection.connectionString
+                dump("Opened Frond Connection document at \(connection.fileURL)")
+                if let connectionStringURL = URL(string: connection.connectionString!) {
+                    self.documentNameLabel.text = "\(connectionStringURL.scheme ?? "")://\(connectionStringURL.host ?? ""):\(connectionStringURL.port ?? 0)\(connectionStringURL.path)"
+                }
                 MongoDB.connect(connectionString: connection.connectionString!, completion: { (result) in
                     guard case .success(let server) = result else {
                         self.appendConnectionStatus(string: "Failed to connect \(result)")
@@ -35,6 +38,9 @@ class ConnectionViewController: UIViewController {
                         DispatchQueue.main.async {
                             self.appendConnectionStatus(string: "\n Collections \(collections)")
                             let collectionsViewController = CollectionsTableViewController()
+                            if let document = self.document as? FrondDocument {
+                                collectionsViewController.document = document
+                            }
                             collectionsViewController.server = server
                             collectionsViewController.database = database
                             self.navigationController?.pushViewController(collectionsViewController, animated: true)

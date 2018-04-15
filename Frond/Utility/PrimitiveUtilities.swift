@@ -11,7 +11,7 @@ import MongoKitten
 struct PrimitiveUtilities {
     static func summary(primitive: Primitive) -> String {
         switch primitive {
-        case is String, is Int32, is Date, is Bool:
+        case is String, is Int, is Int32, is Int64, is Date, is Bool, is NSNull:
             return "\(primitive)"
         case let id as BSON.ObjectId:
             return "Object ID \(id.hexString)"
