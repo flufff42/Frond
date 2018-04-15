@@ -71,7 +71,7 @@ class QueryEditorViewController: UIViewController, UITextViewDelegate {
             for query in queries {
                 actionController.addAction(UIAlertAction(title: query, style: .default, handler: { (action) in
                     self.attributedTextView?.text = action.title
-                    self.validateQuery(self.attributedTextView)
+                    self.validateQuery(self.attributedTextView as Any)
                 }))
             }
             actionController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
@@ -83,7 +83,6 @@ class QueryEditorViewController: UIViewController, UITextViewDelegate {
     }
     @IBOutlet weak var saveQueryBarButton: UIBarButtonItem!
     @IBAction func saveQuery(_ sender: Any) {
-        dump("Time to save query \(attributedTextView?.text)")
         guard let query = attributedTextView?.text else { return }
         delegate?.saveQuery(queryDocumentString: query)
     }
